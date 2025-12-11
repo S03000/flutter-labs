@@ -1,8 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // для Clipboard
+import '../models/currency_pair.dart';
 
-class HistoryScreen extends StatelessWidget {
-  const HistoryScreen({super.key});
+class HistoryScreen extends StatefulWidget {
+  final List<CurrencyPair> history;
+  final Function(CurrencyPair) onHistoryItemTap;
 
+  const HistoryScreen({
+    super.key,
+    required this.history,
+    required this.onHistoryItemTap,
+  });
+
+  @override
+  State<HistoryScreen> createState() => _HistoryScreenState();
+}
+
+class _HistoryScreenState extends State<HistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -10,34 +24,41 @@ class HistoryScreen extends StatelessWidget {
         title: const Text('ИСТОРИЯ'),
         centerTitle: true,
       ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(vertical: 8.0),
-        children: const [
-          _HistoryItem(from: 'USD', to: 'RUB'),
-          _HistoryItem(from: 'EUR', to: 'JPY'),
-          _HistoryItem(from: 'GBP', to: 'USD'),
-          _HistoryItem(from: 'BTC', to: 'USD'),
-        ],
+      body: widget.history.isEmpty
+          ? const Center(child: Text('История пуста'))
+          : ListView.builder(
+        itemCount: widget.history.length,
+        itemBuilder: (context, index) {
+          final pair = widget.history[index];
+          return Dismissible(
+            key: Key('${pair.from}-${pair.to}'),
+            direction: DismissDirection.endToStart,
+            onDismissed: (_) {
+              setState(() {
+                widget.history.removeAt(index);
+              });
+            },
+            background: Container(
+              color: Colors.red,
+              alignment: Alignment.centerRight,
+              padding: const EdgeInsets.only(right: 20),
+              child: const Icon(Icons.delete, color: Colors.white),
+            ),
+            child: ListTile(
+              title: Text('${pair.from} → ${pair.to}'),
+              onTap: () {
+                widget.onHistoryItemTap(pair);
+              },
+              onLongPress: () {
+                Clipboard.setData(ClipboardData(text: '${pair.from} → ${pair.to}'));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Скопировано в буфер обмена')),
+                );
+              },
+            ),
+          );
+        },
       ),
-    );
-  }
-}
-
-class _HistoryItem extends StatelessWidget {
-  final String from;
-  final String to;
-
-  const _HistoryItem({required this.from, required this.to});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      title: Text('$from → $to', style: const TextStyle(fontSize: 16)),
-      trailing: IconButton(
-        icon: const Icon(Icons.delete, color: Colors.red),
-        onPressed: null, // без логики удаления
-      ),
-      onTap: null, // без перехода обратно
     );
   }
 }
