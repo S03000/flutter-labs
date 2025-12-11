@@ -6,16 +6,13 @@ class CurrencyPair {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-          other is CurrencyPair &&
-              from == other.from &&
-              to == other.to;
+      other is CurrencyPair && from == other.from && to == other.to;
 
   @override
   int get hashCode => from.hashCode ^ to.hashCode;
 
-  Map<String, String> toJson() => {'from': from, 'to': to};
+  Map<String, dynamic> toJson() => {'from': from, 'to': to};
 
-  factory CurrencyPair.fromJson(Map<String, dynamic> json) =>
+  static CurrencyPair fromJson(Map<String, dynamic> json) =>
       CurrencyPair(json['from'] as String, json['to'] as String);
 }
